@@ -14,7 +14,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends \
-            bc bison build-essential curl flex \
+            bc bison build-essential wget flex \
             g++-multilib gcc-multilib git gnupg \
             lib32readline-dev lib32z1-dev \
             libelf-dev liblz4-tool libssl-dev \
