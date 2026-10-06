@@ -1,5 +1,5 @@
-# build.yml kanged from Rezoss Reza modified to build kernel with ReSukiSU and SuSFS using the main branch
-name: Build kernel (ReSukiSU, SuSFS, `main` branch)
+# build.yml kanged from Rezoss Reza modified to build kernel with BakaSU using the main branch
+name: Build kernel (BakaSU, `main` branch)
 on:
   workflow_dispatch:
   schedule:
@@ -29,42 +29,14 @@ jobs:
         run: |
           wget -q https://github.com/gyabii/kernel_samsung_sm8550-common/releases/download/anykernel/anykernel.zip
 
-      - name: Apply ReSukiSU with SuSFS
+      - name: Apply BakaSU
         run: |
           set -euxo pipefail
           echo "KERNEL_VERSION=$(grep -m1 '^SUBLEVEL =' ./Makefile | awk '{print $3}')" >> $GITHUB_ENV
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
-          git clone --depth=1 https://gitlab.com/gyabi/susfs4ksu.git -b gki-android13-5.15
-          SUSFS_KERNEL_PATCH="susfs4ksu/kernel_patches/50_add_susfs_in_gki-android13-5.15.patch"
-          patch -p1 < "$SUSFS_KERNEL_PATCH"
-          mkdir -p fs
-          mkdir -p include/linux
-          cp -f susfs4ksu/kernel_patches/fs/susfs.c fs/susfs.c
-          cp -f susfs4ksu/kernel_patches/include/linux/susfs.h include/linux/susfs.h
-          cp -f susfs4ksu/kernel_patches/include/linux/susfs_def.h include/linux/susfs_def.h
-          for f in fs/susfs.c include/linux/susfs.h include/linux/susfs_def.h; do
-            if [ -f "$f" ]; then echo "Found: $f"; else echo "Missing: $f"; fi
-          done
-          rm -rf susfs4ksu
+          curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/refs/heads/main/kernel/setup.sh" | bash -s main
           CONFIG_FILE=arch/arm64/configs/gki_defconfig
           cat >> "$CONFIG_FILE" << 'EOF'
           CONFIG_KSU=y
-          CONFIG_KSU_SUSFS=y
-          CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y
-          CONFIG_KSU_SUSFS_SUS_PATH=y
-          CONFIG_KSU_SUSFS_SUS_MOUNT=y
-          CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y
-          CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
-          CONFIG_KSU_SUSFS_SUS_KSTAT=y
-          CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y
-          CONFIG_KSU_SUSFS_TRY_UMOUNT=y
-          CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y
-          CONFIG_KSU_SUSFS_SPOOF_UNAME=y
-          CONFIG_KSU_SUSFS_ENABLE_LOG=y
-          CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
-          CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
-          CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
-          CONFIG_KSU_SUSFS_SUS_SU=y
           EOF
 
       - name: Set up swap space
@@ -92,7 +64,7 @@ jobs:
           unzip "anykernel.zip" -d anykernel/
           cp out/arch/arm64/boot/Image.gz anykernel/
           touch -a -m -t 200901010000.00 "anykernel/Image.gz"
-          ZIP_NAME="common-5.15.${KERNEL_VERSION}-gyabii_resukisu-susfs-$(date +%d%m%y-%H%M%S)"
+          ZIP_NAME="common-5.15.${KERNEL_VERSION}-gyabii_bakasu-$(date +%d%m%y-%H%M%S)"
           cd anykernel
           zip -r0 ../"${ZIP_NAME}".zip ./*
           cd ..
@@ -107,7 +79,7 @@ jobs:
           EOF
           echo "zip_full_path=$GITHUB_WORKSPACE/${ZIP_NAME}.zip" >> "$GITHUB_OUTPUT"
           echo "zip_name=${ZIP_NAME}.zip" >> "$GITHUB_OUTPUT"
-          echo "tag_name=common-resukisu-5.15.${KERNEL_VERSION}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=common-bakasu-5.15.${KERNEL_VERSION}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
 
       - name: Upload the flashable kernel
         uses: actions/upload-artifact@v7
@@ -118,8 +90,8 @@ jobs:
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          name: "ReSukiSU + SuSFS 5.15.${{ env.KERNEL_VERSION }} common kernel"
+          name: "BakaSU 5.15.${{ env.KERNEL_VERSION }} common kernel"
           tag_name: ${{ steps.package.outputs.tag_name }}
           files: ${{ steps.package.outputs.zip_full_path }}
           body_path: release_notes.md
-          make_latest: false
+          make_latest: true
