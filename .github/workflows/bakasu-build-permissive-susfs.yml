@@ -1,5 +1,5 @@
-# build.yml kanged from Rezoss Reza modified to build kernel with BakaSU and SuSFS using the main branch
-name: Build permissive kernel (BakaSU, SuSFS, `main` branch)
+# build.yml kanged from Rezoss Reza modified to build kernel with BakaSU and SuSFS using the sync-susfs branch
+name: Build permissive kernel (BakaSU, SuSFS, `sync-susfs` branch)
 on:
   workflow_dispatch:
 
@@ -33,7 +33,7 @@ jobs:
           echo "KERNEL_VERSION=$(grep -m1 '^SUBLEVEL =' ./Makefile | awk '{print $3}')" >> $GITHUB_ENV
 
           # Integrate BakaSU
-          curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/refs/heads/main/kernel/setup.sh" | bash -s main
+          curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/refs/heads/sync-susfs/kernel/setup.sh" | bash -s sync-susfs
 
           # Integrate SuSFS
           git clone --depth=1 https://gitlab.com/gyabi/susfs4ksu.git -b gki-android13-5.15
