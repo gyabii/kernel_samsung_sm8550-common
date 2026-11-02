@@ -6677,6 +6677,7 @@ static bool throttle_direct_reclaim(gfp_t gfp_mask, struct zonelist *zonelist,
 	struct zoneref *z;
 	struct zone *zone;
 	pg_data_t *pgdat = NULL;
+	bool bypass = false;
 
 	/*
 	 * Kernel threads should not be throttled as they may be indirectly
@@ -6725,6 +6726,10 @@ static bool throttle_direct_reclaim(gfp_t gfp_mask, struct zonelist *zonelist,
 	if (!pgdat)
 		goto out;
 
+	trace_android_vh_throttle_direct_reclaim_bypass(&bypass);
+	if (bypass)
+		goto out;
+
 	/* Account for the throttling */
 	count_vm_event(PGSCAN_DIRECT_THROTTLE);
 
@@ -6770,6 +6775,7 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
 		.may_swap = 1,
 #endif
 	};
+	int prio = 0;
 
 	/*
 	 * scan_control uses s8 fields for order, priority, and reclaim_idx.
@@ -6789,9 +6795,11 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
 
 	set_task_reclaim_state(current, &sc.reclaim_state);
 	trace_mm_vmscan_direct_reclaim_begin(order, sc.gfp_mask);
+	trace_android_vh_direct_reclaim_begin(&prio);
 
 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
 
+	trace_android_vh_direct_reclaim_end(prio);
 	trace_mm_vmscan_direct_reclaim_end(nr_reclaimed);
 	set_task_reclaim_state(current, NULL);
 
