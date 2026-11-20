@@ -21,7 +21,7 @@ jobs:
             bc bison build-essential curl flex gh \
             g++-multilib gcc-multilib git gnupg \
             lib32readline-dev lib32z1-dev \
-            libelf-dev liblz4-tool libssl-dev \
+            libelf-dev lz4 libssl-dev \
             lzop zlib1g-dev pahole dwarves cpio zip \
             python3 python-is-python3 tar perl lz4 jq
 
